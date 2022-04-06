@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SingleFileAppDependencyContext", "src\SingleFileAppDependencyContext.csproj", "{014BF727-DB78-4334-802D-CB853BE648B1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SingleFileAppDependencyContext.Tests", "tests\SingleFileAppDependencyContext.Tests.csproj", "{C37E8C87-EDFC-4F7D-A552-EA1851A5ED46}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Meta", "Meta", "{8AF2B362-C3EE-450B-A9D1-D7FE92C05644}"
+	ProjectSection(SolutionItems) = preProject
+		global.json = global.json
+		README.md = README.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{014BF727-DB78-4334-802D-CB853BE648B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{014BF727-DB78-4334-802D-CB853BE648B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{014BF727-DB78-4334-802D-CB853BE648B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{014BF727-DB78-4334-802D-CB853BE648B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C37E8C87-EDFC-4F7D-A552-EA1851A5ED46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C37E8C87-EDFC-4F7D-A552-EA1851A5ED46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C37E8C87-EDFC-4F7D-A552-EA1851A5ED46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C37E8C87-EDFC-4F7D-A552-EA1851A5ED46}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
