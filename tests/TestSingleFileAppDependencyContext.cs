@@ -16,7 +16,7 @@ public class TestSingleFileAppDependencyContext : IClassFixture<SingleFileAppFix
     [Theory]
     [CombinatorialData]
     public async Task SingleFileAppDependencyContext(
-        [CombinatorialValues("FindBundleSignature", "CaptureAppHostLogs", "FindBundleHeaderOffsetSymbol")] string method,
+        [CombinatorialValues("FindBundleSignature", "CaptureAppHostLogs", "ParseExecutableFileFormat")] string method,
         [CombinatorialValues("netcoreapp3.1", "net5.0", "net6.0")] string framework,
         bool selfContained)
     {
