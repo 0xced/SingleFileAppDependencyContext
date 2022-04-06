@@ -1,0 +1,43 @@
+name: Run Tests
+
+on: push
+
+env:
+  Configuration: Release
+  ContinuousIntegrationBuild: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ macos-latest, ubuntu-latest, windows-latest ]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    name: Run Tests
+    steps:
+      - name: Checkout git repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Restore NuGet packages
+        run: dotnet restore
+      - name: Build solution
+        run: dotnet build --no-restore
+      - name: Run tests
+        run: dotnet test --no-build --logger "html;LogFileName=../../TestResults-${{ runner.os }}.html" --logger "trx;LogFileName=../../TestResults-${{ runner.os }}.trx" --logger GitHubActions
+      - name: Upload test results
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: TestResults-${{ runner.os }}
+          path: TestResults-${{ runner.os }}.html
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Test Results (${{ runner.os }})
+          path: TestResults-${{ runner.os }}.trx
+          reporter: dotnet-trx

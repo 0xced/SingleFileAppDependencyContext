@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Meta", "Meta", "{8AF2B362-C
 	ProjectSection(SolutionItems) = preProject
 		global.json = global.json
 		README.md = README.md
+		.github\workflows\run-tests.yml = .github\workflows\run-tests.yml
 	EndProjectSection
 EndProject
 Global
