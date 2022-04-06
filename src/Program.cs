@@ -8,8 +8,8 @@ try
     {
         nameof(FindBundleSignature) => new FindBundleSignature(),
         nameof(CaptureAppHostLogs) => new CaptureAppHostLogs(),
-        nameof(FindBundleHeaderOffsetSymbol) => new FindBundleHeaderOffsetSymbol(),
-        _ => throw new ArgumentException($"Usage: {Path.GetFileName(Environment.GetCommandLineArgs()[0])} [{nameof(FindBundleSignature)}|{nameof(CaptureAppHostLogs)}|{nameof(FindBundleHeaderOffsetSymbol)}]")
+        nameof(ParseExecutableFileFormat) => new ParseExecutableFileFormat(),
+        _ => throw new ArgumentException($"Usage: {Path.GetFileName(Environment.GetCommandLineArgs()[0])} [{nameof(FindBundleSignature)}|{nameof(CaptureAppHostLogs)}|{nameof(ParseExecutableFileFormat)}]")
     };
 
     DependencyContext context;

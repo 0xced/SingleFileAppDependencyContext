@@ -49,9 +49,14 @@ The *hardest* part of the problem is to figure out the offset of the bundle head
 
 ## Implementations
 
-Here are different implementations for finding the  `.deps.json` offset and size.
+Here are different implementations for finding the  `.deps.json` offset and size. They all come with their downsides and none is perfect. Another implemention that actively cooperates with the CoreCLR to communicate the required values should be attempted.
 
-The first implementation is a serious, production ready implementation. The second implementation is not really serious and the third implementation is just an excuse to play around with [ELFSharp](https://www.nuget.org/packages/ELFSharp/).
+|          | 👍 Pros                                                | 👎 Cons                                                       |
+| -------- | ----------------------------------------------------- | ------------------------------------------------------------ |
+| Method 1 | Simple to implement                                   | Slow<br />May be wrong if several occurrences of the bundle marker exist in the single-file app host |
+| Method 2 | Safe as the information comes from the CoreCLR itself | Relies on parsing debug logs to retrieve critical information |
+| Method 3 | Fast                                                  | Hard to implement, have to rely on 3rd party libraries to parse ELF, Mach-O and PE file formats ([ELFSharp](https://www.nuget.org/packages/ELFSharp/) and [PeNet](https://www.nuget.org/packages/PeNet/))<br />Will probably break in the future as the apphost binaries evolve |
+| Method 4 | Safe and fast                                         | None, that would be the perfect solution when implemented    |
 
 ### 1. Find the bundle signature
 
@@ -65,72 +70,89 @@ Note: this is how `Microsoft.NET.HostModel` [is implemented][10] but this packag
 
 Implemented in the `CaptureAppHostLogs` class.
 
-This is a very convoluted way to get the `.deps.json` offset and size that I would never use in production but is an interesting experiment. The apphost us run with the `COREHOST_TRACE` environment variable set to `1`, producing logs on stderr. For example:
+This is a very convoluted way to get the `.deps.json` offset and size that I would never use in production but is an interesting experiment. The apphost is run with the `COREHOST_TRACE` environment variable set to `1`, producing logs on stderr. For example:
 
 ```
 […]
-Bundle Header Offset: [99320]
-Tracing enabled @ Tue Apr  5 20:37:03 2022 UTC
---- Invoked hostfxr_main_bundle_startupinfo [commit hash: c24d9a9c91c5d04b7b4de71f1a9f33ac35e09663]
+Bundle Header Offset: [42b4ada]
+--- Invoked hostfxr_main_bundle_startupinfo [commit hash: static]
 Mapped application bundle
 Unmapped application bundle
 Single-File bundle details:
-DepsJson Offset:[1f4c0] Size[25da]
-RuntimeConfigJson Offset:[21a9a] Size[8b]
+DepsJson Offset:[42a4888] Size[10252]
+RuntimeConfigJson Offset:[a6ac50] Size[10f]
 .net core 3 compatibility mode: [No]
 […]
 ```
 
 Redirecting stderr and reading the logs makes it possible to catch the value we are interested in:
 
-> DepsJson Offset:[**1f4c0**] Size[**25da**]
+> DepsJson Offset:[**42a4888**] Size[**10252**]
 
-### 3. Get the bundle header offset by reading the apphost symbol
+### 3. Get the bundle header offset by parsing the apphost file format
 
-Implemented in the `FindBundleHeaderOffsetSymbol` class.
+Implemented in the `ParseExecutableFileFormat` class.
 
 The idea is to find the `bundle_marker_t::header_offset()::placeholder` symbol in the executable symbol table. This directly points to the bundle header offset.
 
-Like the second option, this should not be used in production since the symbol could be stripped from the binary. Also, reading the symbol table is a non trivial task and requires specific code for reading ELF (Linux), Mach-O (macOS) and PE (Windows) files.
+Like the second option, this should not be used in production since the symbol could not exist in the binary. Also, reading the symbol table is a non trivial task and requires specific code for reading ELF (Linux), Mach-O (macOS) and PE (Windows) files.
 
-For example, on macOS:
+For example, on macOS, with the app published with `dotnet publish -c Release -f net6.0 -r osx-x64 --self-contained`
 
-Find the symbol address (`00000001000106e0`)
+Find the symbol address (`000000010086eea0`)
 ```
-nm -m SingleFileApp | grep placeholder          
-00000001000106e0 (__DATA,__data) non-external __ZZN15bundle_marker_t13header_offsetEvE11placeholder
+nm SingleFileAppDependencyContext | grep placeholder
+000000010086eea0 d __ZZN15bundle_marker_t13header_offsetEvE11placeholder
 ```
 
 Get information about the `__DATA,__data` section where the symbol is located.
 ```
-otool -lv SingleFileApp | grep __data -A 4 
+otool -lv SingleFileAppDependencyContext | grep __data -A 4
   sectname __data
    segname __DATA
-      addr 0x00000001000106e0
-      size 0x00000000000004a1
-    offset 67296
+      addr 0x000000010086ee40
+      size 0x0000000000004c8c
+    offset 8842816
 ```
 
-Compute the file offset. Note that it's not guaranteed that the symbol is the first one in the data section. The symbol address matching the data section is a coincidence and could change in the future.
+Compute the file offset.
 ```
-symbolAddress = 0x00000001000106e0;
-dataAddress = 0x00000001000106e0 - 67296 = 0x0000000100000000
-fileOffset = symbolAddress - dataAddress = 0x106E0 = 67296
+symbolAddress = 0x000000010086eea0
+dataAddress = 0x000000010086ee40
+dataOffset = 0x86ee40 (8842816)
+fileOffset = dataOffset + symbolAddress - dataAddress = 0x86eea0 = 8842912
 ```
 
 Finally read the bundle header offset:
 ```
-xxd -s 67296 -l 8 -p SingleFileApp
-2093090000000000
+xxd -s 8842912 -l 8 -p SingleFileAppDependencyContext
+da4a2b0400000000
 ```
 
 Convert this 64-bits little-endian value:
 ```
-python3 -c "from struct import unpack; print(unpack('Q', bytes.fromhex('2093090000000000'))[0])"
-627488
+python3 -c "from struct import unpack; print(unpack('Q', bytes.fromhex('da4a2b0400000000'))[0])"
+69946074
 ```
 
-`627488` is `99320` in hexadecimal which is the bundle header offset.
+`69946074` is `0x42b4ada` in hexadecimal which is the bundle header offset. This can be verified by running `COREHOST_TRACE=1 ./SingleFileAppDependencyContext`
+
+> The managed DLL bound to this executable is: 'SingleFileAppDependencyContext.dll'
+> Detected Single-File app bundle
+> Using internal fxr
+> […]
+> Bundle Header Offset: [**42b4ada**]
+> […]
+> DepsJson Offset:[42a4888] Size[10252]
+> RuntimeConfigJson Offset:[a6ac50] Size[10f]
+
+For other formats (ELF and PE) the apphost  symbols are stripped so a hardcoded offset from the beginning of the data section is used instead. For Mach-O, the hardcoded offset is used as a fallback if the `bundle_marker_t::header_offset()::placeholder` symbol is not found.
+
+### 4. Active cooperation with the CoreCLR
+
+Not yet implemented.
+
+This is probably the best solution that should be attempted. The CoreCLR should provide the `.deps.json` offset and size (or even maybe more, such as the whole [bundle::info][13]) and managed code should access it, maybe through [FCall or QCall][12]. I'm not familiar with the subject so I'll have to investigate.
 
 [1]: https://www.nuget.org/packages/Microsoft.Extensions.DependencyModel/6.0.0
 [2]: https://docs.microsoft.com/en-us/dotnet/core/deploying/single-file/overview
@@ -143,3 +165,5 @@ python3 -c "from struct import unpack; print(unpack('Q', bytes.fromhex('20930900
 [9]: https://github.com/dotnet/runtime/blob/v6.0.3/src/installer/managed/Microsoft.NET.HostModel/AppHost/HostWriter.cs#L182-L191
 [10]: https://github.com/dotnet/runtime/blob/v6.0.3/src/installer/managed/Microsoft.NET.HostModel/AppHost/HostWriter.cs#L214-L246
 [11]: https://github.com/dotnet/runtime/pull/67386#issuecomment-1087407963
+[12]: https://github.com/dotnet/runtime/blob/v6.0.3/docs/design/coreclr/botr/corelib.md#calling-from-managed-to-native-code
+[13]: https://github.com/dotnet/runtime/blob/v6.0.3/src/native/corehost/bundle/info.h#L10-L13
