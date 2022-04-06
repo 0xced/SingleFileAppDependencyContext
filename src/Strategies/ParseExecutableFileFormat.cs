@@ -30,7 +30,7 @@ internal class ParseExecutableFileFormat : IJsonDeps
         long bundleHeaderFileOffset;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            using var elfFile = ELFReader.Load<ulong>(appHostStream, shouldOwnStream: true);
+            using var elfFile = ELFReader.Load<ulong>(appHostStream, shouldOwnStream: false);
             var dataSection = elfFile.Sections.FirstOrDefault(e => e.Name == ".data") ?? throw new Exception(".data section not found");
             // 16 was found by inspecting ~/.nuget/packages/microsoft.netcore.app.host.osx-x64/6.0.3/runtimes/osx-x64/native/singlefilehost
             // It could be different for other app host versions
@@ -38,6 +38,7 @@ internal class ParseExecutableFileFormat : IJsonDeps
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
+            // shouldOwnStream seems to be inverted for Mach-O files :-/
             var machOFile = MachOReader.Load(appHostStream, shouldOwnStream: true);
             bundleHeaderFileOffset = GetMachOBundleHeaderFileOffset(machOFile);
         }
