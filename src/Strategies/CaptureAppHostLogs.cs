@@ -35,7 +35,7 @@ internal class CaptureAppHostLogs : IJsonDeps
 
         process.Start();
         process.BeginErrorReadLine();
-        if (!process.WaitForExit(1000))
+        if (!process.WaitForExit(2000))
         {
             process.Kill();
         }
