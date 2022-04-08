@@ -101,8 +101,8 @@ For example, on macOS, with the app published with `dotnet publish -c Release -f
 
 Find the symbol address (`000000010086eea0`)
 ```
-nm SingleFileAppDependencyContext | grep placeholder
-000000010086eea0 d __ZZN15bundle_marker_t13header_offsetEvE11placeholder
+nm -m bin/Release/net6.0/osx-x64/publish/SingleFileAppDependencyContext | grep placeholder
+000000010086eea0 (__DATA,__data) non-external __ZZN15bundle_marker_t13header_offsetEvE11placeholder
 ```
 
 Get information about the `__DATA,__data` section where the symbol is located.
@@ -137,14 +137,14 @@ python3 -c "from struct import unpack; print(unpack('Q', bytes.fromhex('da4a2b04
 
 `69946074` is `0x42b4ada` in hexadecimal which is the bundle header offset. This can be verified by running `COREHOST_TRACE=1 ./SingleFileAppDependencyContext`
 
-> The managed DLL bound to this executable is: 'SingleFileAppDependencyContext.dll'
-> Detected Single-File app bundle
-> Using internal fxr
-> […]
-> Bundle Header Offset: [**42b4ada**]
-> […]
-> DepsJson Offset:[42a4888] Size[10252]
-> RuntimeConfigJson Offset:[a6ac50] Size[10f]
+> The managed DLL bound to this executable is: 'SingleFileAppDependencyContext.dll'  
+> Detected Single-File app bundle  
+> Using internal fxr  
+> […]  
+> Bundle Header Offset: [**42b4ada**]  
+> […]  
+> DepsJson Offset:[42a4888] Size[10252]  
+> RuntimeConfigJson Offset:[a6ac50] Size[10f]  
 
 For other formats (ELF and PE) the apphost  symbols are stripped so a hardcoded offset from the beginning of the data section is used instead. For Mach-O, the hardcoded offset is used as a fallback if the `bundle_marker_t::header_offset()::placeholder` symbol is not found.
 
@@ -167,3 +167,4 @@ This is probably the best solution that should be attempted. The CoreCLR should 
 [11]: https://github.com/dotnet/runtime/pull/67386#issuecomment-1087407963
 [12]: https://github.com/dotnet/runtime/blob/v6.0.3/docs/design/coreclr/botr/corelib.md#calling-from-managed-to-native-code
 [13]: https://github.com/dotnet/runtime/blob/v6.0.3/src/native/corehost/bundle/info.h#L10-L13
+
