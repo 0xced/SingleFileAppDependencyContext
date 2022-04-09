@@ -38,8 +38,7 @@ internal class ParseExecutableFileFormat : IJsonDeps
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            // shouldOwnStream seems to be inverted for Mach-O files :-/
-            var machOFile = MachOReader.Load(appHostStream, shouldOwnStream: true);
+            var machOFile = MachOReader.Load(appHostStream, shouldOwnStream: false);
             bundleHeaderFileOffset = GetMachOBundleHeaderFileOffset(machOFile);
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -60,19 +59,19 @@ internal class ParseExecutableFileFormat : IJsonDeps
 
     private static long GetMachOBundleHeaderFileOffset(MachO machOFile)
     {
-        var symbolTables = machOFile.GetCommandsOfType<SymbolTable>();
+        const string symbolName = "__ZZN15bundle_marker_t13header_offsetEvE11placeholder";
+        var bundleHeaderOffsetSymbol = machOFile.GetCommandsOfType<SymbolTable>()
+            .SelectMany(e => e.Symbols).Cast<Symbol?>().FirstOrDefault(e => e?.Name == symbolName);
+        if (bundleHeaderOffsetSymbol is { Section: { } section } symbol)
+        {
+            return section.Offset + symbol.Value - (long)section.Address;
+        }
+
         var segments = machOFile.GetCommandsOfType<Segment>();
         var dataSegment = segments.FirstOrDefault(e => e.Name == "__DATA") ?? throw new Exception("__DATA segment not found");
-        var dataSection = dataSegment.Sections.FirstOrDefault(e => e.Name == "__data") ?? throw new Exception("__data section not found");;
-
-        const string symbolName = "__ZZN15bundle_marker_t13header_offsetEvE11placeholder";
-        var bundleHeaderOffsetSymbol = symbolTables.SelectMany(e => e.Symbols).Cast<Symbol?>().FirstOrDefault(e => e?.Name == symbolName);
-        if (!bundleHeaderOffsetSymbol.HasValue)
-        {
-            // 96 was found by inspecting ~/.nuget/packages/microsoft.netcore.app.host.osx-x64/6.0.3/runtimes/osx-x64/native/singlefilehost
-            // It could be different for other app host versions
-            return dataSection.Offset + 96;
-        }
-        return bundleHeaderOffsetSymbol.Value.Value - (long)(dataSection.Address - dataSection.Offset);
+        var dataSection = dataSegment.Sections.FirstOrDefault(e => e.Name == "__data") ?? throw new Exception("__data section not found");
+        // 96 was found by inspecting ~/.nuget/packages/microsoft.netcore.app.host.osx-x64/6.0.3/runtimes/osx-x64/native/singlefilehost
+        // It could be different for other app host versions
+        return dataSection.Offset + 96;
     }
 }

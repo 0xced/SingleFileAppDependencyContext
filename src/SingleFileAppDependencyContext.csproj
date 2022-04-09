@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ELFSharp" Version="2.13.3" />
+    <PackageReference Include="ELFSharp" Version="2.14.0" />
     <PackageReference Include="Humanizer" Version="2.14.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="6.0.0" />
     <PackageReference Include="PeNet" Version="2.9.7" />

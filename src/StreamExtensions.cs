@@ -2,6 +2,13 @@ namespace SingleFileAppDependencyContext;
 
 internal static class StreamExtensions
 {
+    /// <summary>
+    /// Get the <see cref="Location"/> of the bundled deps.json file within a single file app host readable through the <paramref name="appHostStream"/>.
+    /// </summary>
+    /// <param name="appHostStream">A <see cref="Stream"/> for reading the single file app host.</param>
+    /// <param name="bundleHeaderFileOffset">The offset in bytes of the bundle header. See https://github.com/dotnet/designs/blob/main/accepted/2020/single-file/bundler.md</param>
+    /// <returns>The <see cref="Location"/> of the bundled deps.json file within a single file app host readable through the <paramref name="appHostStream"/>.</returns>
+    /// <remarks>The <see cref="appHostStream"/> must be seekable.</remarks>
     public static Location GetDepsJsonLocation(this Stream appHostStream, long bundleHeaderFileOffset)
     {
         using var appHostReader = new BinaryReader(appHostStream);

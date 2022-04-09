@@ -2,6 +2,12 @@ namespace SingleFileAppDependencyContext;
 
 public static class DependencyContextExtensions
 {
+    /// <summary>
+    /// Dump the dependency context <see cref="DependencyContext.Target"/> and <see cref="DependencyContext.RuntimeLibraries"/>
+    /// into the specified <paramref name="writer"/> in a nicely indented way.
+    /// </summary>
+    /// <param name="context">The <see cref="DependencyContext"/> to dump.</param>
+    /// <param name="writer">The <see cref="TextWriter"/> where to dump the <paramref name="context"/>.</param>
     public static void Dump(this DependencyContext context, TextWriter writer)
     {
         writer.WriteLine("Target");
