@@ -43,16 +43,16 @@ internal class CaptureAppHostLogs : BaseJsonDeps
             if (match.Success)
             {
                 var p = (Process)sender;
-                p.CancelErrorRead();
-                p.Kill();
                 depsJsonOffset = Convert.ToInt64(match.Groups[1].Value, 16);
                 depsJsonSize = Convert.ToInt64(match.Groups[2].Value, 16);
+                p.CancelErrorRead();
+                p.Kill();
             }
         };
 
         process.Start();
         process.BeginErrorReadLine();
-        if (!process.WaitForExit(3000))
+        if (!process.WaitForExit(2000))
         {
             process.Kill();
         }
