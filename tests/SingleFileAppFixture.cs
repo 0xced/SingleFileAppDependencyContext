@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Buildalyzer;
 using CliWrap;
 using FluentAssertions;
 using Xunit;
@@ -36,8 +37,10 @@ public class SingleFileAppFixture : IAsyncLifetime
 
     async Task IAsyncLifetime.InitializeAsync()
     {
+        var projectFilePath = Path.Combine(GetSrcDirectory(), "SingleFileAppDependencyContext.csproj");
+        var projectFile = new AnalyzerManager().GetProject(projectFilePath).ProjectFile;
         var parameters =
-            from framework in new[] { "netcoreapp3.1", "net5.0", "net6.0" }
+            from framework in projectFile.TargetFrameworks
             from selfContained in new[] { true, false }
             select (framework, selfContained);
 
