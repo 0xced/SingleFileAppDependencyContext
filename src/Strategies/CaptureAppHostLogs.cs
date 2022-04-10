@@ -37,6 +37,8 @@ internal class CaptureAppHostLogs : BaseJsonDeps
         long? depsJsonSize = null;
         process.ErrorDataReceived += (sender, args) =>
         {
+            var line = args.Data ?? "";
+            Console.Out.WriteLine($"--> {line}");
             var match = depsJsonRegex.Match(args.Data ?? "");
             if (match.Success)
             {
@@ -50,7 +52,7 @@ internal class CaptureAppHostLogs : BaseJsonDeps
 
         process.Start();
         process.BeginErrorReadLine();
-        if (!process.WaitForExit(2000))
+        if (!process.WaitForExit(3000))
         {
             process.Kill();
         }

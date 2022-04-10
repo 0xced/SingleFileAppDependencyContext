@@ -41,11 +41,11 @@ public class TestSingleFileAppDependencyContext : IClassFixture<SingleFileAppFix
 
         if (framework == "netcoreapp3.1")
         {
-            output.Should().StartWith("=== Detected non single-file app => using DependencyContext.Default ===");
+            output.Should().Contain("Detected non single-file app => using DependencyContext.Default");
         }
         else
         {
-            output.Should().StartWith($"=== Using {method} ===");
+            output.Should().Contain($"Using {method}");
         }
     }
 }

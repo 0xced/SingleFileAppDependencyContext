@@ -15,7 +15,7 @@ try
     DependencyContext context;
     if (string.IsNullOrEmpty(Assembly.GetEntryAssembly()?.Location))
     {
-        Console.Out.WriteLine($"=== Using {implementation.GetType().Name} ===");
+        Console.Out.WriteLine($"🏷 Using {implementation.GetType().Name}");
         var stopwatch = Stopwatch.StartNew();
         using var depsJsonStream = implementation.CreateJsonDepsStream(GetAppHostPath());
         Console.Out.WriteLine($"⏱ {stopwatch.Elapsed.TotalMilliseconds} ms");
@@ -24,7 +24,7 @@ try
     }
     else
     {
-        Console.Out.WriteLine("=== Detected non single-file app => using DependencyContext.Default ===");
+        Console.Out.WriteLine("🗂 Detected non single-file app => using DependencyContext.Default");
         context = DependencyContext.Default;
     }
 
@@ -34,7 +34,7 @@ try
 }
 catch (Exception exception)
 {
-    Console.Error.WriteLine("An unexpected error has occurred");
+    Console.Error.WriteLine("💥 An unexpected error has occurred");
     Console.Error.WriteLine(exception);
     return 1;
 }
